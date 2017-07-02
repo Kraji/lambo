@@ -15,6 +15,9 @@ def ctw_update(countTree, betaTree, eta, index, xt, alpha):
 	pw = pw / np.sum(pw)
 	pe = (countTree[:, index] + 0.5) / (np.sum(countTree[:, index]) + Nx / 2.)
 	temp = betaTree[index]
+
+	# I don't get this condition on temp, it seems to me that the two lines are identical, can you check ?
+
 	if temp < 1000: 
 		eta = (alpha * temp * pe[:Nx-1] + (1-alpha) * pw[:Nx-1])/(alpha*temp*pe[Nx-1] + (1-alpha)*pw[Nx-1])
 	else:
@@ -76,10 +79,14 @@ def ctw_live_update(x,xt,Nx,D,Px_record,countTree,betaTree):
 	return Px_record_updated, countTree, betaTree, x
 
 
-x = np.random.choice([0,1], size=100)
+#x = np.random.choice([0,1], size=100)
+x = np.array([((1+(-1)**k)/2 for k in range(1000)])
 D = 5
 
 Px = ctw_algorithm(x, 2, D)
+print('début')
+print Px[:,:11]
+print('fin')
 print Px[:,-5:]
 
 
