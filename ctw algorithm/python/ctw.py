@@ -54,13 +54,13 @@ def ctw_algorithm(x, Nx, D):
 			node =floor((node+Nx-2.)/Nx)
 		eta_sum = np.sum(eta) + 1.
 		Px_record[:, i-D] = np.array([float(eta), 1]) / eta_sum
-	return Px_record
+	return Px_record, countTree, betaTree
 
 def ctw_live_update(x,xt,Nx,D,Px_record,countTree,betaTree):
 	indexweight = np.array([Nx**k for k in range(D)])
 	offset = (Nx**D - 1) / (Nx-1) + 1
 
-	context = x[len(x)-D:len(x)]
+	context = x[-D:]
 	leafindex = context.dot(indexweight) + offset
 
 	eta = (countTree[:Nx-1, leafindex-1] + 0.5) / (countTree[Nx-1, leafindex-1] + 0.5)
@@ -80,11 +80,11 @@ def ctw_live_update(x,xt,Nx,D,Px_record,countTree,betaTree):
 
 
 #x = np.random.choice([0,1], size=100)
-x = np.array([((1+(-1)**k)/2 for k in range(1000)])
+x = np.array([(1+(-1)**k)/2 for k in range(1000)])
 D = 5
 
-Px = ctw_algorithm(x, 2, D)
-print('début')
+Px = ctw_algorithm(x, 2, D)[0]
+print('debut')
 print Px[:,:11]
 print('fin')
 print Px[:,-5:]
