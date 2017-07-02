@@ -11,8 +11,8 @@ for i=1:length(trend)/2
 end
 
 %kk=10;
-error=zeros(1,15);
-kk=2
+%error=zeros(1,15);
+kk=2;
 ctw=ctwalgorithm(trend,2,kk);
 
 [maxi_p,index_p]=max(ctw);

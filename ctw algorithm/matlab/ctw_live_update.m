@@ -18,6 +18,6 @@ while ( node ~=0)
 end
 
 eta_sum = sum(eta)+1;
-Px_record(:,length(Px_record+1)) = [eta 1]'/eta_sum ;
+Px_record(:,length(Px_record)+1) = [eta 1]'/eta_sum ;
 
 x= [x,xt];
