@@ -31,7 +31,7 @@ def trade_data(k, currency, lastid):
 
 	return last, data
 
-# load the id of the last transaction
+# load the id of the last transaction on the market
 
 def last_transaction_id(k, currency):
 	res=k.query_public('Trades',{'pair':currency})
@@ -43,16 +43,34 @@ def last_transaction_id(k, currency):
 k=krakenex.API()
 currency='XETHZEUR'
 
-f = open('EthEur.p','rb')
-A = cPickle.load(f)
-print 'Shape of the transaction matrix : '+ str(A.shape)
-f.close()
+# Opening of the trade register or initialization 
 
-f=open('LastID','rb')
-last_id=f.read().decode('utf8')
-f.close()
+try:
+    f = open('EthEur.p','rb')
+    A = cPickle.load(f)
+    print 'Shape of the transaction matrix : '+ str(A.shape)
+    f.close()
+except IOError:
+    last_id, data= trade_data(k,currency,'0')
+    f=open('EthEur.p','wb')
+    cPickle.dump(data,f)
+    f.close()
+    f = open('EthEur.p','rb')
+    A = cPickle.load(f)
+    print 'Register of transaction just created and initiated'
+    f.close()
+
+# Reading of the last transaction ID of the register or initialization
+
+try:
+    f=open('LastID','rb')
+    last_id=f.read().decode('utf8')	
+    f.close()
+except IOError:
+    f=open('LastID','wb')
+    f.write(last_id)
+    f.close()
 print 'ID of the last saved transaction : '+ last_id
-#print type(last_id)
 
 starttime=time.time()
 i=0
@@ -62,29 +80,34 @@ print 'ID of the last transation on the market : '+ last_now
 
 time.sleep(1. - ((time.time() - starttime) % 1.))
 
-bar = progressbar.ProgressBar(maxval=200, \
+bar = progressbar.ProgressBar(maxval=200000, \
     widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
 bar.start()
 
-while last_id<last_now or i<200:
-    last_id, data= trade_data(k,currency,last_id)
+while last_id<last_now or i<200000:
+    try:
+        last_id, data= trade_data(k,currency,last_id)
 
-    f = open('EthEur.p','rb')
-    A = cPickle.load(f)
-    f.close()
+        f = open('EthEur.p','rb')
+        A = cPickle.load(f)
+        f.close()
     
-    f = open('EthEur.p','wb')
-    A=np.concatenate((A,data),axis=0)
-    cPickle.dump(A,f)
-    f.close()
+        f = open('EthEur.p','wb')
+        A=np.concatenate((A,data),axis=0)
+        cPickle.dump(A,f)
+        f.close()
 
-    f = open('LastID','wb')
-    f.write(last_id)
-    f.close()
+        f = open('LastID','wb')
+        f.write(last_id)
+        f.close()
 
-    bar.update(i+1)
-    i+=1
-    time.sleep(3. - ((time.time() - starttime) % 3.))
+        bar.update(i+1)
+        i+=1
+        time.sleep(2. - ((time.time() - starttime) % 2.))
+
+    except ValueError as e:
+        if e.message == 'No JSON object could be decoded':
+            continue
 
 bar.finish()
 
