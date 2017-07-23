@@ -80,7 +80,7 @@ def ctw_live_update(x,xt,Nx,D,Px_record,countTree,betaTree):
 
 
 #x = np.random.choice([0,1], size=100)
-x = np.array([(1+(-1)**k)/2 for k in range(1000)])
+x = np.array([(1+(-1)**k)/2 for k in range(10000)])
 D = 5
 
 Px = ctw_algorithm(x, 2, D)[0]

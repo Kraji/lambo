@@ -10,7 +10,8 @@ set(0,'DefaultFigureWindowStyle','docked')
 %     trend(2*i)=0;
 % end
 
-trend=(1+(-1).^[0:999])/2;
+%trend=(1+(-1).^[0:999])/2;
+trend=1.^[0:999];
 
 %kk=10;
 %error=zeros(1,15);
