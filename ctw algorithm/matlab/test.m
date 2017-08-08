@@ -10,13 +10,15 @@ set(0,'DefaultFigureWindowStyle','docked')
 %     trend(2*i)=0;
 % end
 
+
+trend=randi(3,1000,1)';
 %trend=(1+(-1).^[0:999])/2;
-trend=1.^[0:999];
+%trend=1.^[0:999];
 
 %kk=10;
 %error=zeros(1,15);
 kk=5;
-ctw=ctwalgorithm(trend,2,kk);
+ctw=ctwalgorithm(trend,3,kk);
 
 %[maxi_p,index_p]=max(ctw);
 %prediction=index_p-1;

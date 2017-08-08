@@ -80,11 +80,11 @@ print 'ID of the last transation on the market : '+ last_now
 
 time.sleep(1. - ((time.time() - starttime) % 1.))
 
-bar = progressbar.ProgressBar(maxval=200000, \
-    widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+bar = progressbar.ProgressBar(maxval=200, \
+    widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Counter()])
 bar.start()
 
-while last_id<last_now or i<200000:
+while last_id<last_now and i<200:
     try:
         last_id, data= trade_data(k,currency,last_id)
 
