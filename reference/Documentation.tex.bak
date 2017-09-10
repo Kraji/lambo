@@ -19,6 +19,8 @@
 \usepackage{braket}
 \usepackage{xcolor}
 \usepackage[margin=0.6in,footskip=0.25in]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{graphs,graphs.standard}
 
 \setcounter{secnumdepth}{4}
 
