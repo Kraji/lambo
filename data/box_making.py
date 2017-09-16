@@ -28,7 +28,7 @@ def box_making(data_input, delta_t, initial_time,final_time):
     	vwap[ind] += volume[j] * price[j]
     	weights[ind] += volume[j]
     for k in range(len(vwap)):
-    	if weights[k] > 0.0001:
+    	if weights[k] > 0.00001:
             vwap[k] = vwap[k] / weights[k]
     	else:
     	    vwap[k] = vwap[k-1]
