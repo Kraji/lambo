@@ -1,6 +1,7 @@
 import numpy as np
 
-def box_making(data_input, delta_t, initial_transaction):
+# data_input: price, volume, time
+def box_making(data_input, delta_t, initial_time,final_time):
 
     dataShape = data_input.shape
     (nRows, nCols)= dataShape
@@ -10,8 +11,8 @@ def box_making(data_input, delta_t, initial_transaction):
     volume=data_input[:,1]
     time=data_input[:,2]
     
-    initial_time = data_input[init_transaction,2]
-    final_time =  data_input[nRows-1,2]
+    # initial_time = data_input[0,2]
+    # final_time =  data_input[nRows-1,2]
     
     time_interval = final_time - initial_time
     nb_bins = int(time_interval // delta_t +1)
@@ -22,8 +23,7 @@ def box_making(data_input, delta_t, initial_transaction):
     weights = np.zeros(nb_bins)
     time_stamp=initial_time+delta_t*np.arange(nb_bins)
 
-
-    for j in range(init_ind,nb_data):
+    for j in range(nb_data):
     	ind = int((time[j]-initial_time)//delta_t)
     	vwap[ind] += volume[j] * price[j]
     	weights[ind] += volume[j]
