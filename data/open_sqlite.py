@@ -9,7 +9,7 @@ cursor = conn.cursor()
 pairs = ['ETCETH', 'ETCXBT', 'ETHEUR', 'ETHGBP', 'ETHUSD', 'ETHXBT', 'GNOETH', 'GNOEUR', 'GNOUSD', 'GNOXBT', 'LTCEUR', 'LTCUSD', 'LTCXBT', 'XBTEUR', 'XBTGBP', 'XBTUSD', 'ZECEUR', 'ZECUSD', 'ZECXBT']
 
 
-usedPairs = ['ETHEUR','XBTEUR']
+usedPairs = ['ETHEUR','XBTEUR','LTCEUR']
 
 # 01/01/2017
 # timeOrigin=1483228800
@@ -30,5 +30,6 @@ for pair in usedPairs:
     (nRows, nCols) = vwap_pair.shape
     for i in range(nRows):
         vwap_cursor.execute("INSERT INTO %s VALUES (%f, %f, %i)" % (pair,vwap_pair[i,0],vwap_pair[i,1],int(vwap_pair[i,2])))
+    vwap_sqlite.commit()
 
 

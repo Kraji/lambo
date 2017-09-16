@@ -1,26 +1,25 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sqlite3
-execfile('box_making.py')
+
+execfile('../ctw\ algorithm/python/ctw.py')
 conn = sqlite3.connect('../../vwap.sqlite')
 
 cursor = conn.cursor()
 
-# ETCETH ETCXBT ETHEUR ETHGBP ETHUSD ETHXBT GNOETH GNOEUR GNOUSD GNOXBT LTCEUR LTCUSD LTCXBT XBTEUR XBTGBP XBTUSD ZECEUR ZECUSD ZECXBT
-pairs = ['ETCETH', 'ETCXBT', 'ETHEUR', 'ETHGBP', 'ETHUSD', 'ETHXBT', 'GNOETH', 'GNOEUR', 'GNOUSD', 'GNOXBT', 'LTCEUR', 'LTCUSD', 'LTCXBT', 'XBTEUR', 'XBTGBP', 'XBTUSD', 'ZECEUR', 'ZECUSD', 'ZECXBT']
 
-
-usedPairs = ['ETHEUR','XBTEUR','LTCEUR']
-
-# 01/01/2017
-# timeOrigin=1483228800
-timeOrigin=1483229100
-# 26/06/2017
-timeFinal=1498435200
-
-cursor.execute("SELECT Price,Volume,Time FROM ETH")
+cursor.execute("SELECT Price,Volume,Time FROM ETHEUR")
 eth = np.array(cursor.fetchall())
 
-cursor.execute("SELECT Price,Volume,Time FROM BTC")
+cursor.execute("SELECT Price,Volume,Time FROM XBTEUR")
 btc = np.array(cursor.fetchall())
 
+(size, p) = btc.shape
+# plt.plot(btc[:,2],btc[:,0])
+# plt.show()
+
+ethLog = np.log(eth[1:,0]) - np.log(eth[:(size-1),0]) 
+btcLog = np.log(btc[1:,0]) - np.log(btc[:(size-1),0]) 
+plt.plot(btcLog)
+# plt.plot(ethLog)
+plt.show()
