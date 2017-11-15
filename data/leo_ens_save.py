@@ -8,6 +8,25 @@ import tensorflow as tf
 from random import randint
 import math
 
+def alpha(tab):
+    s= tab.size
+    ans=np.zeros(s)
+    for i in range(s-1):
+        if (tab[i+1] >= tab[i]):
+            k=0
+            while (k <= i and tab[i+1]>=tab[i-k]):
+                k +=1
+            ans[i+1]=k
+
+        if (tab[i+1] < tab[i]):
+            k=0
+            while (k <= i and tab[i+1]<=tab[i-k]):
+                k +=1
+            ans[i+1]=-k
+
+    return ans
+
+
 def av_group_vol(tab,n,delta):
     s = tab.size
     new_size = (s - 2*delta) / n
@@ -65,6 +84,7 @@ def miniMaxPeriods(tab):
 
 # conn = sqlite3.connect('../../vwap.sqlite')
 conn = sqlite3.connect('../../krajbox.sqlite')
+# 2 min
 
 cursor = conn.cursor()
 
@@ -73,7 +93,7 @@ cursor.execute("SELECT Price,Volume,Time FROM ETHEUR")
 eth = np.array(cursor.fetchall())
 
 # cursor.execute("SELECT Price,Volume,Time FROM XBTEUR")
-# btc = np.array(cursor.fetchall())
+# eth = np.array(cursor.fetchall())
 minWindowSize = 1
 
 theTime = eth[:,2]
@@ -81,7 +101,7 @@ print 'min time ', np.min(theTime) # 1er janv 2017
 print 'max time ', np.max(theTime) # 26 juin 2017
 print 'total timestamp: ', theTime.size
 
-timeWindow=[0.69,0.995]
+timeWindow=[0.70,0.92]
 indexStart = int(timeWindow[0]*theTime.size)
 indexStop = int(timeWindow[1]*theTime.size)
 # nbPoints = int(np.floor(theTime.size / 3))
@@ -100,7 +120,28 @@ print size
 timeStampsPeriod = np.min(theTime) + minWindowSize*120*np.array(range(size))
 
 ethLog = np.log(ethPrice)
+
+alEth = alpha(ethPrice)
+deltas = np.array([10,20,30,50,80,100,200,500,1000,1500])
+nMAX  = np.zeros(deltas.size)
+nMIN  = np.zeros(deltas.size)
+for i in range(deltas.size):
+    for k in alEth:
+        if (k >= deltas[i]):
+            nMAX[i] = nMAX[i] + 1
+        if (k <= -deltas[i]):
+            nMIN[i] = nMIN[i] + 1
+plt.hist(alEth,range=[-1500,1500],bins=80)
+plt.show()
+plt.plot(deltas,nMAX)
+plt.plot(deltas,nMIN)
+plt.show()
 ## STRATEGY
+# windows=np.array([30,150,200,300,350])
+# windows=np.array([500,700,1000,1500,2000])
+windows=np.array([1500])
+maxWindow = np.max(windows)
+nbWindow=windows.size
 
 nbTimes = ethPrice.size
 initial_money = 1000 + 5*ethPrice[maxWindow]
@@ -109,10 +150,6 @@ print 'TOTAL: ', initial_money
 
 periodeMax =50
 
-# windows=np.array([30,150,200,300,350])
-windows=np.array([500,700,1000,1500,2000])
-maxWindow = np.max(windows)
-nbWindow=windows.size
 
 portfolioMoney = initial_money*np.ones(shape=(nbTimes,nbWindow))
 portfolioCash = initial_money*np.ones(shape=(nbTimes,nbWindow))
@@ -133,37 +170,75 @@ deltaMax=0
 tMaxi = np.zeros(nbWindow)
 tMini = np.zeros(nbWindow)
 
+corr=autocorrelation(ethLog,7) 
+thres = np.std(corr)
+
+tSell=[]
+tBuy=[]
+
 for i in range(nbTimes):
     if (i> maxWindow):
         price = ethPrice[i]
         portfolioMoney[i,:] = money + price*ether
         portfolioCash[i,:] = money
         holdFolio[i] = initial_money*price / ethPrice[maxWindow]
+        # TEMPS CARAC
+        if (ethPrice[i] == np.min(ethPrice[i-tempsCarac:i+1])):
+            if (tMax > 0):
+                deltaMin = i - tMax
+                # print 'deltaMin : ',deltaMin
+            tMin = i
+        if (ethPrice[i] == np.max(ethPrice[i-tempsCarac:i+1])):
+            if (tMin > 0):
+                deltaMax = i -tMin
+                # print 'deltaMax : ',deltaMax
+            tMax = i
+
         for k in range(nbWindow):
-            periodeLong  = windows[k]
+            periodeMax  = windows[k]
             # if (deltaMin > 0  and deltaMax >0):
                 # periodeMax = int(periodeMax*(deltaMin + deltaMax)/2000)
-            periodeMiddle = np.max([int(periodeMax/3),1])
-            periodeShort = np.max([int(periodeMax/10),1])
+            periodeShort = np.max([int(periodeMax/4),1])
+            periodeXShort = np.max([int(periodeMax/3),1])
 
             # STRATS
-            if (ethPrice[i] == np.min(ethPrice[i-periodeLong:i+1])):
+            if (ethPrice[i] == np.min(ethPrice[i-periodeMax:i+1]) and counter[k]==0):
                 # Buy
-                tMini[k]=i
-            if (ethPrice[i] == np.max(ethPrice[i-periodeLong:i+1])):
+                counter[k]=1
+                # moneyBuy = money[k] *0.5
+                # money[k] -= moneyBuy
+                # ether[k] += moneyBuy* (1.0-fees) / price
+            if (ethPrice[i] == np.max(ethPrice[i-periodeMax:i+1])):
                 tMaxi[k] = i
-            
-            if (ethPrice[i] == np.max(ethPrice[i-periodeShort:i+1]) and (i-tMini[k])< periodeMiddle):
+                counter[k]=0
+                # # SELL
+                # nbMin[k] = nbMin[k] + 1
+                # ethSell = ether[k] *0.5
+                # ether[k] -= ethSell
+                # money[k] += ethSell * price * (1.0-fees)
+                # sellTimes.append(timeStampsPeriod[i])
+            if (ethPrice[i] == np.max(ethPrice[i-periodeShort:i+1])):
                 # Buy
-                moneyBuy = money[k] *0.5
+                moneyBuy = money[k] *0.99
                 money[k] -= moneyBuy
                 ether[k] += moneyBuy* (1.0-fees) / price
+                tBuy.append(i)
                 # counter[k]=0
-            elif (ethPrice[i] == np.min(ethPrice[i-periodeShort:i+1]) and (i-tMaxi[k])< periodeMiddle):
+            if (np.abs(corr[i])> 3*thres):
+                tMaxi[k] = i
+            if (
+                    (ethPrice[i] == np.min(ethPrice[i-periodeXShort:i+1]) and counter[k]==1)
+                    # or 
+                    # (ethPrice[i] == np.min(ethPrice[i-periodeXShort:i+1]))
+                    # or
+                    # (tMaxi[k]>0 and 
+                        # (i-tMaxi[k])< 100 and ethPrice[i] == np.min(ethPrice[i-periodeXShort:i+1]))
+                    ):
                 # SELL
-                ethSell = ether[k] *0.9
+                ethSell = ether[k] *0.99
                 ether[k] -= ethSell
                 money[k] += ethSell * price * (1.0-fees)
+                tSell.append(i)
                 # sellTimes.append(timeStampsPeriod[i])
             # else:
                 # counter[k]=0
@@ -193,8 +268,12 @@ plt.subplot(2,1,1)
 # plt.scatter(buyTimes,buyY,marker='+', c='green')
 # plt.scatter(sellTimes,sellY,marker='v', c='red')
 
+tBuy=np.array(tBuy)
+tSell=np.array(tSell)
 for k in range(nbWindow):
     plt.plot(timeStampsPeriod,np.log(portfolioMoney[:,k]), label = str(windows[k]))
+    plt.scatter(tBuy,6*np.ones(tBuy.size),marker='+', c='green')
+    plt.scatter(tSell,6*np.ones(tSell.size),1,marker='v', c='red')
     plt.legend()
 
 plt.plot(timeStampsPeriod,np.log(holdFolio),label='HOLDER')
@@ -203,9 +282,9 @@ plt.title('From '+ convertTimestamp(np.min(theTime)) + ' to ' + convertTimestamp
 
 plt.subplot(2,1,2)
 corr=autocorrelation(ethLog,7) 
-vol=volatilite(ethLog,7) 
+# vol=volatilite(ethLog,7) 
 plt.plot(timeStampsPeriod,corr)
-plt.plot(timeStampsPeriod,vol)
+# plt.plot(timeStampsPeriod,vol)
 # plt.plot(maxTimes)
 # plt.plot(timeStampsPeriod,holdFolio,label='HOLDER')
 # for k in range(nbWindow):
@@ -216,5 +295,6 @@ plt.plot(timeStampsPeriod,vol)
 plt.show()
 
 print 'Windows',windows
+print thres
 # print 'NB_MIN',nbMin
 # print 'NB_MAX',nbMax
